@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Petty Cash Handler • SM Office</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#183b64;--blue:#245b91;--light:#eef4fa;--line:#cbd5e1;--text:#172033;--muted:#64748b;--green:#147d54;--red:#b42318;--white:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4f7fb;color:var(--text)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.top{height:62px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:20}
+.brand{font-weight:800;font-size:18px}.brand small{display:block;font-size:11px;font-weight:400;opacity:.8}
+.userbar{display:flex;gap:8px;align-items:center}.pill{background:#ffffff1c;padding:7px 10px;border-radius:999px;font-size:12px}
+.layout{display:flex;min-height:calc(100vh - 62px)}.side{width:235px;background:#fff;border-right:1px solid var(--line);padding:14px;position:sticky;top:62px;height:calc(100vh - 62px)}
+.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:8px;color:#334155}.nav button.active,.nav button:hover{background:var(--light);color:var(--navy);font-weight:700}
+.main{flex:1;padding:20px;max-width:1600px}.page{display:none}.page.active{display:block}.title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.title h1{margin:0;font-size:23px}.sub{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 2px 8px #0f172a0b}.stat{font-size:25px;font-weight:800;margin-top:4px}.label{font-size:12px;color:var(--muted)}
+label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}input,select,textarea{width:100%;padding:9px 10px;border:1px solid #b8c4d1;border-radius:7px;background:#fff}textarea{min-height:82px;resize:vertical}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}.c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:7px;padding:9px 13px;font-weight:700}.primary{background:var(--blue);color:#fff}.secondary{background:#e7eef6;color:var(--navy)}.success{background:var(--green);color:#fff}.danger{background:var(--red);color:#fff}.ghost{background:#fff;border:1px solid var(--line);color:#334155}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff}table{width:100%;border-collapse:collapse;min-width:850px}th,td{border-bottom:1px solid #e2e8f0;padding:8px 9px;text-align:left;font-size:12px;vertical-align:top}th{background:#eef4fa;color:#23415f;position:sticky;top:0;z-index:1}.money{text-align:right;white-space:nowrap}.credit{color:#087443;font-weight:700}.debit{color:#a51d1d;font-weight:700}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#edf2f7;font-size:11px}.badge.credit{background:#e6f7ef}.badge.debit{background:#fdecec}
+.bill{background:#fff;border:1px solid #b7c3d0;max-width:900px;margin:auto;padding:30px}.billhead{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #183b64;padding-bottom:14px}.billtitle{font-size:22px;font-weight:800;color:#183b64}.billmeta{text-align:right;font-size:12px}.billtable{margin-top:18px}.billtable th{position:static}.signs{display:grid;grid-template-columns:repeat(3,1fr);gap:25px;margin-top:70px}.sign{border-top:1px solid #333;text-align:center;padding-top:6px;font-size:12px}
+.modal{position:fixed;inset:0;background:#0f172a99;display:none;align-items:center;justify-content:center;z-index:50;padding:15px}.modal.show{display:flex}.modalbox{background:#fff;border-radius:12px;padding:20px;width:min(560px,100%);max-height:90vh;overflow:auto}
+.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:11px 14px;border-radius:8px;display:none;z-index:80}.toast.show{display:block}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#eaf2fa,#fff)}.loginbox{width:min(470px,100%);background:#fff;padding:28px;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 35px #0f172a18}
+hr{border:0;border-top:1px solid #e2e8f0;margin:16px 0}.hint{font-size:11px;color:var(--muted);line-height:1.5}
+@media(max-width:1000px){.side{width:190px}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.layout{display:block}.side{width:auto;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line)}.nav{grid-template-columns:repeat(3,1fr)}.main{padding:12px}.row{grid-template-columns:repeat(2,1fr)}.c2,.c3,.c4,.c6,.c8,.c12{grid-column:span 1}.grid2{grid-template-columns:1fr}.signs{grid-template-columns:1fr}.top{height:auto;min-height:62px}}
+@media print{.top,.side,.no-print{display:none!important}.layout,.main{display:block;padding:0}.page{display:none!important}.page.printpage{display:block!important}.bill{border:0;max-width:none}}
+</style>
+</head>
+<body>
+<div id="setupScreen" class="login" style="display:none">
+  <div class="loginbox">
+    <h2>Cloud Backend Setup</h2>
+    <p class="sub">This app uses Supabase as the cloud database + file storage. Enter your project's URL and anon/public key. Never use a service-role key in this HTML.</p>
+    <label>Supabase Project URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co">
+    <br><label>Supabase Anon/Public Key</label><input id="sbKey" placeholder="eyJ...">
+    <br><button class="btn primary" style="width:100%" onclick="saveConfig()">Connect to Cloud</button>
+    <p class="hint">After connecting, run the included <b>schema.sql</b> once in Supabase SQL Editor. Then create your user with email/password.</p>
+  </div>
+</div>
+
+<div id="authScreen" class="login" style="display:none">
+  <div class="loginbox">
+    <h2>Petty Cash Handler</h2><p class="sub">SM Office • Cloud Login</p><hr>
+    <label>Email</label><input id="authEmail" type="email">
+    <br><label>Password</label><input id="authPassword" type="password">
+    <br><button class="btn primary" style="width:100%" onclick="login()">Sign In</button>
+    <br><br><button class="btn secondary" style="width:100%" onclick="signup()">Create Account</button>
+    <p id="authMsg" class="hint"></p>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<header class="top"><div class="brand">PETTY CASH HANDLER <small>SM Office • Cloud Finance & Bill Book</small></div>
+<div class="userbar"><span id="userEmail" class="pill"></span><button class="btn secondary" onclick="logout()">Logout</button></div></header>
+<div class="layout">
+<aside class="side"><nav class="nav">
+<button data-page="dashboard" class="active" onclick="showPage('dashboard')">📊 Dashboard</button>
+<button data-page="entry" onclick="showPage('entry')">➕ New Bill / Entry</button>
+<button data-page="register" onclick="showPage('register')">📒 Bill Book / Register</button>
+<button data-page="categories" onclick="showPage('categories')">🏷 Categories</button>
+<button data-page="drivers" onclick="showPage('drivers')">👨‍✈️ Drivers</button>
+<button data-page="vehicles" onclick="showPage('vehicles')">🚗 Vehicles</button>
+<button data-page="files" onclick="showPage('files')">📎 Documents</button>
+<button data-page="reports" onclick="showPage('reports')">📈 Monthly Reports</button>
+<button data-page="settings" onclick="showPage('settings')">⚙ Settings</button>
+</nav></aside>
+<main class="main">
+
+<section id="dashboard" class="page active">
+<div class="title"><div><h1>Dashboard</h1><div class="sub">Cloud-saved petty cash overview</div></div><button class="btn primary" onclick="showPage('entry')">+ New Entry</button></div>
+<div class="grid">
+<div class="card"><div class="label">Current Month Credit</div><div id="sCredit" class="stat">₹0.00</div></div>
+<div class="card"><div class="label">Current Month Debit</div><div id="sDebit" class="stat">₹0.00</div></div>
+<div class="card"><div class="label">Net Balance</div><div id="sNet" class="stat">₹0.00</div></div>
+<div class="card"><div class="label">Transactions</div><div id="sCount" class="stat">0</div></div>
+</div><br>
+<div class="card"><h3>Recent Transactions</h3><div id="recent" class="tablewrap"></div></div>
+</section>
+
+<section id="entry" class="page">
+<div class="title"><div><h1>New Bill / Petty Cash Entry</h1><div class="sub">Designed like a digital bill book; everything saves to the cloud.</div></div></div>
+<div class="card">
+<div class="row">
+<div class="c3"><label>Date</label><input id="eDate" type="date"></div>
+<div class="c3"><label>Transaction Type</label><select id="eType"><option>Debit</option><option>Credit</option></select></div>
+<div class="c3"><label>Category</label><select id="eCategory"></select></div>
+<div class="c3"><label>Bill / Voucher No.</label><input id="eBillNo" placeholder="Auto if blank"></div>
+<div class="c4"><label>Description</label><input id="eDescription"></div>
+<div class="c4"><label>Driver Name / Vehicle No.</label><input id="eParty" list="partyList"><datalist id="partyList"></datalist></div>
+<div class="c4"><label>Place</label><input id="ePlace"></div>
+<div class="c4"><label>Amount (₹)</label><input id="eAmount" type="number" min="0" step="0.01"></div>
+<div class="c4"><label>Payment Mode</label><select id="eMode"><option>Cash</option><option>UPI</option><option>Bank</option><option>Cheque</option><option>Other</option></select></div>
+<div class="c4"><label>Reference / Cheque / UTR</label><input id="eRef"></div>
+<div class="c6"><label>Remarks</label><textarea id="eRemarks"></textarea></div>
+<div class="c6"><label>Supporting PDF / Image</label><input id="eFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"></div>
+</div><br>
+<div class="actions"><button class="btn success" onclick="saveEntry()">Save to Cloud</button><button class="btn secondary" onclick="resetEntry()">Clear</button><button class="btn ghost" onclick="previewBill()">Preview Bill</button></div>
+<p id="entryMsg" class="hint"></p>
+</div>
+</section>
+
+<section id="register" class="page">
+<div class="title"><div><h1>Bill Book / Main Register</h1><div class="sub">Similar to your current sheet: Date • Type • Category • Description • Driver/Vehicle • Amount</div></div></div>
+<div class="card no-print"><div class="row">
+<div class="c3"><label>Month</label><input id="rMonth" type="month"></div><div class="c3"><label>Category</label><select id="rCat"></select></div><div class="c3"><label>Type</label><select id="rType"><option>All</option><option>Credit</option><option>Debit</option></select></div><div class="c3"><label>Search</label><input id="rSearch" placeholder="Description / vehicle / bill no."></div>
+</div><br><button class="btn primary" onclick="loadRegister()">Refresh</button> <button class="btn secondary" onclick="window.print()">Print</button></div>
+<div id="registerTable" class="tablewrap"></div>
+</section>
+
+<section id="categories" class="page">
+<div class="title"><div><h1>Category Management</h1><div class="sub">Add categories anytime; they immediately appear in the bill form.</div></div></div>
+<div class="card"><div class="row"><div class="c6"><label>Category Name</label><input id="catName"></div><div class="c6"><label>Description</label><input id="catDesc"></div></div><br><button class="btn primary" onclick="addCategory()">+ Add Category</button></div>
+<div id="categoryTable" class="tablewrap"></div>
+</section>
+
+<section id="drivers" class="page">
+<div class="title"><div><h1>Drivers</h1><div class="sub">Maintain driver names, mobile and notes.</div></div></div>
+<div class="card"><div class="row"><div class="c4"><label>Name</label><input id="dName"></div><div class="c4"><label>Mobile</label><input id="dMobile"></div><div class="c4"><label>Notes</label><input id="dNotes"></div></div><br><button class="btn primary" onclick="addDriver()">+ Add Driver</button></div>
+<div id="driverTable" class="tablewrap"></div>
+</section>
+
+<section id="vehicles" class="page">
+<div class="title"><div><h1>Vehicles</h1><div class="sub">Vehicle master for Fastag, repairs, service and driver entries.</div></div></div>
+<div class="card"><div class="row"><div class="c4"><label>Vehicle No.</label><input id="vNo"></div><div class="c4"><label>Vehicle Type</label><input id="vType"></div><div class="c4"><label>Assigned Driver</label><input id="vDriver"></div></div><br><button class="btn primary" onclick="addVehicle()">+ Add Vehicle</button></div>
+<div id="vehicleTable" class="tablewrap"></div>
+</section>
+
+<section id="files" class="page">
+<div class="title"><div><h1>Documents</h1><div class="sub">Cloud Storage attachments linked to transactions.</div></div></div>
+<div class="card"><p class="hint">PDF/images uploaded from the entry form are stored in the Supabase Storage bucket and linked to the bill/transaction record. Use the register to open the related document.</p><div id="fileTable" class="tablewrap"></div></div>
+</section>
+
+<section id="reports" class="page">
+<div class="title"><div><h1>Monthly Reports</h1><div class="sub">Category-wise and transaction-type-wise totals.</div></div></div>
+<div class="card no-print"><div class="row"><div class="c4"><label>Month</label><input id="pMonth" type="month"></div></div><br><button class="btn primary" onclick="loadReport()">Generate</button> <button class="btn secondary" onclick="window.print()">Print Report</button></div>
+<div id="reportBox"></div>
+</section>
+
+<section id="settings" class="page">
+<div class="title"><div><h1>Settings</h1><div class="sub">Office / bill print details</div></div></div>
+<div class="card"><div class="row">
+<div class="c6"><label>Office Name</label><input id="setOffice"></div><div class="c6"><label>Office Address</label><input id="setAddress"></div>
+<div class="c4"><label>Prepared By</label><input id="setPrepared" value="Joel Roy (SM Office Assistant)"></div><div class="c4"><label>MS Signature Label</label><input id="setMS" value="Signature of MS"></div><div class="c4"><label>Finance Signature Label</label><input id="setFinance" value="Signature of Finance Department"></div>
+</div><br><button class="btn primary" onclick="saveSettings()">Save Settings</button><p class="hint">These settings are stored in the cloud for your account.</p></div>
+</section>
+
+<section id="printBill" class="page printpage"><div id="billPreview"></div></section>
+
+</main></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+let supabaseClient=null, currentUser=null;
+const CFG='petty_cash_supabase_config';
+const $=id=>document.getElementById(id);
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2500)}
+function monthNow(){return new Date().toISOString().slice(0,7)}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active','printpage'));$(id).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='register')loadRegister();if(id==='categories')loadCategories();if(id==='drivers')loadDrivers();if(id==='vehicles')loadVehicles();if(id==='files')loadFiles();if(id==='reports')loadReport();if(id==='dashboard')loadDashboard()}
+function cfg(){try{return JSON.parse(localStorage.getItem(CFG)||'null')}catch(e){return null}}
+function saveConfig(){let url=$('sbUrl').value.trim(),key=$('sbKey').value.trim();if(!url||!key)return alert('Enter both Supabase URL and anon/public key');localStorage.setItem(CFG,JSON.stringify({url,key}));location.reload()}
+async function init(){
+let c=cfg();if(!c){$('setupScreen').style.display='flex';return}
+supabaseClient=supabase.createClient(c.url,c.key);
+const {data:{session}}=await supabaseClient.auth.getSession();
+if(session){currentUser=session.user;startApp()}else{$('authScreen').style.display='flex'}
+supabaseClient.auth.onAuthStateChange((e,s)=>{if(s){currentUser=s.user;startApp()}});
+}
+async function login(){let {data,error}=await supabaseClient.auth.signInWithPassword({email:$('authEmail').value,password:$('authPassword').value});if(error)$('authMsg').textContent=error.message;else{currentUser=data.user;startApp()}}
+async function signup(){let {data,error}=await supabaseClient.auth.signUp({email:$('authEmail').value,password:$('authPassword').value});$('authMsg').textContent=error?error.message:'Account created. Check your email if confirmation is enabled.'}
+async function logout(){await supabaseClient.auth.signOut();location.reload()}
+async function startApp(){$('setupScreen').style.display='none';$('authScreen').style.display='none';$('app').style.display='block';$('userEmail').textContent=currentUser.email||'';$('eDate').value=new Date().toISOString().slice(0,10);$('rMonth').value=monthNow();$('pMonth').value=monthNow();await loadCategories();await loadDrivers();await loadVehicles();await loadSettings();await loadDashboard()}
+async function q(table,opts={}){let q=supabaseClient.from(table).select(opts.select||'*');if(opts.eq)for(const [k,v] of Object.entries(opts.eq))q=q.eq(k,v);if(opts.order)q=q.order(opts.order,{ascending:opts.ascending??false});if(opts.limit)q=q.limit(opts.limit);return q}
+async function loadCategories(){let {data,error}=await q('categories',{eq:{user_id:currentUser.id},order:'name',ascending:true});if(error)return;let active=data.filter(x=>x.active!==false);['eCategory','rCat'].forEach(id=>{let el=$(id);el.innerHTML=id==='rCat'?'<option value="all">All</option>':'';active.forEach(x=>{let o=document.createElement('option');o.value=x.id;o.textContent=x.name;el.appendChild(o)})});$('categoryTable').innerHTML='<table><thead><tr><th>Category</th><th>Description</th><th>Status</th><th>Action</th></tr></thead><tbody>'+data.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.description)}</td><td>${x.active?'Active':'Inactive'}</td><td><button class="btn ${x.active?'danger':'success'}" onclick="toggleCategory('${x.id}',${x.active})">${x.active?'Deactivate':'Activate'}</button></td></tr>`).join('')+'</tbody></table>'}
+async function addCategory(){let name=$('catName').value.trim();if(!name)return;let {error}=await supabaseClient.from('categories').insert({user_id:currentUser.id,name,description:$('catDesc').value.trim()});if(error)return toast(error.message);$('catName').value='';$('catDesc').value='';toast('Category added to cloud');loadCategories()}
+async function toggleCategory(id,active){let {error}=await supabaseClient.from('categories').update({active:!active}).eq('id',id).eq('user_id',currentUser.id);if(error)return toast(error.message);loadCategories()}
+async function addDriver(){let name=$('dName').value.trim();if(!name)return;let {error}=await supabaseClient.from('drivers').insert({user_id:currentUser.id,name,mobile:$('dMobile').value.trim(),notes:$('dNotes').value.trim()});if(error)return toast(error.message);['dName','dMobile','dNotes'].forEach(x=>$(x).value='');toast('Driver saved');loadDrivers()}
+async function loadDrivers(){let {data,error}=await q('drivers',{eq:{user_id:currentUser.id},order:'name',ascending:true});if(error)return;$('partyList').innerHTML=(data||[]).map(x=>`<option value="${esc(x.name)}"></option>`).join('')+(data||[]).map(x=>`<option value="${esc(x.mobile||'')}"></option>`).join('');$('driverTable').innerHTML='<table><thead><tr><th>Name</th><th>Mobile</th><th>Notes</th></tr></thead><tbody>'+data.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.mobile)}</td><td>${esc(x.notes)}</td></tr>`).join('')+'</tbody></table>'}
+async function addVehicle(){let no=$('vNo').value.trim();if(!no)return;let {error}=await supabaseClient.from('vehicles').insert({user_id:currentUser.id,vehicle_no:no,vehicle_type:$('vType').value.trim(),assigned_driver:$('vDriver').value.trim()});if(error)return toast(error.message);['vNo','vType','vDriver'].forEach(x=>$(x).value='');toast('Vehicle saved');loadVehicles()}
+async function loadVehicles(){let {data,error}=await q('vehicles',{eq:{user_id:currentUser.id},order:'vehicle_no',ascending:true});if(error)return;$('vehicleTable').innerHTML='<table><thead><tr><th>Vehicle No.</th><th>Type</th><th>Assigned Driver</th></tr></thead><tbody>'+data.map(x=>`<tr><td>${esc(x.vehicle_no)}</td><td>${esc(x.vehicle_type)}</td><td>${esc(x.assigned_driver)}</td></tr>`).join('')+'</tbody></table>'}
+async function saveEntry(){
+let amount=Number($('eAmount').value||0);if(!amount)return toast('Enter amount');
+let categoryId=$('eCategory').value;let bill=$('eBillNo').value.trim()||('PC-'+new Date().toISOString().replace(/\D/g,'').slice(0,14));
+let payload={user_id:currentUser.id,entry_date:$('eDate').value,transaction_type:$('eType').value,category_id:categoryId,bill_no:bill,description:$('eDescription').value.trim(),party:$('eParty').value.trim(),place:$('ePlace').value.trim(),amount,payment_mode:$('eMode').value,reference_no:$('eRef').value.trim(),remarks:$('eRemarks').value.trim()};
+let {data,error}=await supabaseClient.from('transactions').insert(payload).select().single();if(error)return $('entryMsg').textContent=error.message;
+let file=$('eFile').files[0];if(file){let safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');let path=currentUser.id+'/'+data.id+'/'+safe;let up=await supabaseClient.storage.from('petty-cash-documents').upload(path,file,{upsert:true});if(up.error){toast('Entry saved, but file upload failed: '+up.error.message)}else await supabaseClient.from('transactions').update({file_path:path,file_name:file.name}).eq('id',data.id)}
+$('entryMsg').textContent='Saved successfully to cloud. Bill/Voucher: '+bill;toast('Transaction saved to cloud');resetEntry();loadDashboard()}
+function resetEntry(){$('eDescription').value='';$('eParty').value='';$('ePlace').value='';$('eAmount').value='';$('eRef').value='';$('eRemarks').value='';$('eFile').value='';$('eBillNo').value=''}
+async function loadRegister(){
+let month=$('rMonth').value;let query=supabaseClient.from('transactions').select('*,categories(name)').eq('user_id',currentUser.id).gte('entry_date',month+'-01').lt('entry_date',nextMonth(month)).order('entry_date',{ascending:false}).order('created_at',{ascending:false});
+if($('rType').value!=='All')query=query.eq('transaction_type',$('rType').value);if($('rCat').value!=='all')query=query.eq('category_id',$('rCat').value);
+let {data,error}=await query;if(error)return $('registerTable').textContent=error.message;let s=$('rSearch').value.toLowerCase();if(s)data=data.filter(x=>JSON.stringify(x).toLowerCase().includes(s));
+$('registerTable').innerHTML=tableHtml(data)}
+function nextMonth(m){let [y,mo]=m.split('-').map(Number);mo++;if(mo===13){y++;mo=1}return `${y}-${String(mo).padStart(2,'0')}-01`}
+function tableHtml(data){return '<table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Driver / Vehicle</th><th>Place</th><th>Bill</th><th class="money">Amount</th><th>Payment</th><th>Document</th><th>Action</th></tr></thead><tbody>'+data.map(x=>`<tr><td>${esc(x.entry_date)}</td><td><span class="badge ${x.transaction_type.toLowerCase()}">${esc(x.transaction_type)}</span></td><td>${esc(x.categories?.name)}</td><td>${esc(x.description)}</td><td>${esc(x.party)}</td><td>${esc(x.place)}</td><td>${esc(x.bill_no)}</td><td class="money ${x.transaction_type.toLowerCase()}">${money(x.amount)}</td><td>${esc(x.payment_mode)}</td><td>${x.file_path?`<button class="btn secondary" onclick="openFile('${x.file_path}')">${esc(x.file_name||'Open')}</button>`:'-'}</td><td><button class="btn ghost" onclick="previewSavedBill('${x.id}')">Bill</button></td></tr>`).join('')+'</tbody></table>'}
+async function openFile(path){let {data,error}=await supabaseClient.storage.from('petty-cash-documents').createSignedUrl(path,3600);if(error)return toast(error.message);window.open(data.signedUrl,'_blank')}
+async function loadFiles(){let {data,error}=await supabaseClient.from('transactions').select('id,entry_date,bill_no,file_name,file_path').eq('user_id',currentUser.id).not('file_path','is',null).order('entry_date',{ascending:false});if(error)return;$('fileTable').innerHTML='<table><thead><tr><th>Date</th><th>Bill</th><th>File</th><th>Open</th></tr></thead><tbody>'+data.map(x=>`<tr><td>${esc(x.entry_date)}</td><td>${esc(x.bill_no)}</td><td>${esc(x.file_name)}</td><td><button class="btn secondary" onclick="openFile('${x.file_path}')">Open</button></td></tr>`).join('')+'</tbody></table>'}
+async function loadDashboard(){let m=monthNow();let {data}=await supabaseClient.from('transactions').select('transaction_type,amount').eq('user_id',currentUser.id).gte('entry_date',m+'-01').lt('entry_date',nextMonth(m));let cr=0,dr=0;(data||[]).forEach(x=>x.transaction_type==='Credit'?cr+=Number(x.amount):dr+=Number(x.amount));$('sCredit').textContent=money(cr);$('sDebit').textContent=money(dr);$('sNet').textContent=money(cr-dr);$('sCount').textContent=(data||[]).length;let {data:recent}=await supabaseClient.from('transactions').select('*,categories(name)').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(10);$('recent').innerHTML=tableHtml(recent||[])}
+async function loadReport(){let m=$('pMonth').value;if(!m)return;let {data,error}=await supabaseClient.from('transactions').select('transaction_type,amount,category_id,categories(name)').eq('user_id',currentUser.id).gte('entry_date',m+'-01').lt('entry_date',nextMonth(m));if(error)return $('reportBox').textContent=error.message;let map={};(data||[]).forEach(x=>{let n=x.categories?.name||'Uncategorised';map[n]??={Credit:0,Debit:0};map[n][x.transaction_type]+=Number(x.amount)});let rows=Object.entries(map);let cr=data.filter(x=>x.transaction_type==='Credit').reduce((a,x)=>a+Number(x.amount),0),dr=data.filter(x=>x.transaction_type==='Debit').reduce((a,x)=>a+Number(x.amount),0);$('reportBox').innerHTML=`<div class="card"><h3>${m} Summary</h3><p><b>Credit:</b> ${money(cr)} &nbsp;&nbsp; <b>Debit:</b> ${money(dr)} &nbsp;&nbsp; <b>Net:</b> ${money(cr-dr)}</p></div><div class="card"><table><thead><tr><th>Category</th><th class="money">Credit</th><th class="money">Debit</th><th class="money">Net</th></tr></thead><tbody>${rows.map(([n,v])=>`<tr><td>${esc(n)}</td><td class="money credit">${money(v.Credit)}</td><td class="money debit">${money(v.Debit)}</td><td class="money">${money(v.Credit-v.Debit)}</td></tr>`).join('')}</tbody></table></div>`}
+async function saveSettings(){let vals={office_name:$('setOffice').value,address:$('setAddress').value,prepared_by:$('setPrepared').value,ms_label:$('setMS').value,finance_label:$('setFinance').value};let {error}=await supabaseClient.from('settings').upsert({user_id:currentUser.id,settings:vals});if(error)return toast(error.message);toast('Settings saved to cloud')}
+async function loadSettings(){let {data}=await supabaseClient.from('settings').select('settings').eq('user_id',currentUser.id).maybeSingle();if(data?.settings){let s=data.settings;$('setOffice').value=s.office_name||'';$('setAddress').value=s.address||'';$('setPrepared').value=s.prepared_by||$('setPrepared').value;$('setMS').value=s.ms_label||$('setMS').value;$('setFinance').value=s.finance_label||$('setFinance').value}}
+async function previewBill(){showPage('printBill');let cat=$('eCategory').selectedOptions[0]?.textContent||'';renderBill({entry_date:$('eDate').value,transaction_type:$('eType').value,bill_no:$('eBillNo').value||'PREVIEW',categories:{name:cat},description:$('eDescription').value,party:$('eParty').value,place:$('ePlace').value,amount:$('eAmount').value,payment_mode:$('eMode').value,reference_no:$('eRef').value})}
+async function previewSavedBill(id){let {data,error}=await supabaseClient.from('transactions').select('*,categories(name)').eq('id',id).single();if(error)return toast(error.message);showPage('printBill');renderBill(data);setTimeout(()=>window.print(),250)}
+async function renderBill(x){let {data}=await supabaseClient.from('settings').select('settings').eq('user_id',currentUser.id).maybeSingle();let s=data?.settings||{};$('billPreview').innerHTML=`<div class="bill"><div class="billhead"><div><div class="billtitle">${esc(s.office_name||'SM OFFICE')}</div><div>${esc(s.address||'Finance / Petty Cash')}</div><div class="sub">PETTY CASH / BILL VOUCHER</div></div><div class="billmeta"><b>Bill No:</b> ${esc(x.bill_no)}<br><b>Date:</b> ${esc(x.entry_date)}<br><b>Type:</b> ${esc(x.transaction_type)}</div></div><div class="billtable"><table><tr><th>Description</th><th>Category</th><th>Driver / Vehicle</th><th>Place</th><th>Payment Mode</th><th class="money">Amount</th></tr><tr><td>${esc(x.description)}</td><td>${esc(x.categories?.name)}</td><td>${esc(x.party)}</td><td>${esc(x.place)}</td><td>${esc(x.payment_mode)}</td><td class="money">${money(x.amount)}</td></tr></table></div><p><b>Reference:</b> ${esc(x.reference_no||'')}</p><div class="signs"><div class="sign">${esc(s.prepared_by||'Joel Roy (SM Office Assistant)')}</div><div class="sign">${esc(s.ms_label||'Signature of MS')}</div><div class="sign">${esc(s.finance_label||'Signature of Finance Department')}</div></div></div>`}
+init();
+</script>
+</body></html>
